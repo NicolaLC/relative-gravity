@@ -4,13 +4,9 @@ using System.Data;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class PlayerController : MonoBehaviour
-{
+public class PlayerController : MonoBehaviour {
 	[SerializeField, Header("Movement Settings")]
 	private float Speed = 10f;
-
-	[SerializeField]
-	private float MaxHorizontalSpeed = 15f;
 
 	[SerializeField]
 	private float JumpForce = 5f;
@@ -24,7 +20,9 @@ public class PlayerController : MonoBehaviour
 	[SerializeField, Header("Audio Settings")]
 	private AudioClip JumpClip;
 
-	private Vector2 M_NextMovement;
+	public UnityEvent<Quaternion> OnPlayerRotate = new UnityEvent<Quaternion>();
+
+	private Vector3 M_NextMovement;
 	private Rigidbody2D M_RigidBody;
 	private bool M_IsGrounded = true;
 	private bool M_IsRotating = false;
@@ -38,11 +36,9 @@ public class PlayerController : MonoBehaviour
 	private SpriteRenderer M_SpriteRenderer;
 	private bool M_IsSpriteFlipped = false;
 
-	private void Awake()
-	{
+	private void Awake() {
 		M_RigidBody = GetComponent<Rigidbody2D>();
-		if (!M_RigidBody)
-		{
+		if (!M_RigidBody) {
 			throw new Exception("Player needs RigidBody");
 		}
 
@@ -53,8 +49,7 @@ public class PlayerController : MonoBehaviour
 		M_SpriteRenderer = GetComponent<SpriteRenderer>();
 	}
 
-	private void Update()
-	{
+	private void Update() {
 		CheckGround();
 		M_JumpCooldown--;
 
@@ -66,38 +61,39 @@ public class PlayerController : MonoBehaviour
 		M_NextMovement.x = GetHorizontalMovement(HorizontalAxis, Jump);
 		M_NextMovement.y = GetVerticalMovement(VerticalAxis);
 
-		if (HorizontalAxis != 0)
-		{
+		if (HorizontalAxis != 0) {
 			M_IsSpriteFlipped = HorizontalAxis < 0;
 			M_SpriteRenderer.flipX = M_IsSpriteFlipped;
 		}
 
-		if (!Jump) { return; }
+		if (Jump) {
+			M_JumpCooldown = 100;
+		}
 
-		M_AudioSource.PlayOneShot(JumpClip);
-		StartRotate(HorizontalAxis);
-		M_JumpCooldown = 100;
-		M_IsGrounded = false;
+		if(Input.GetAxisRaw("Fire1") != 0) {
+			StartRotate(-1);
+		}
+		else if(Input.GetAxisRaw("Fire2") != 0) {
+			StartRotate(1);
+		}
 	}
 
-	private float GetVerticalMovement(float VerticalAxis)
-	{
+	private float GetVerticalMovement(float VerticalAxis) {
 		return VerticalAxis > 0 && M_IsGrounded ? VerticalAxis * JumpForce : M_Gravity;
 	}
 
-	private float GetHorizontalMovement(float HorizontalAxis, bool Jump)
-	{
+	private float GetHorizontalMovement(float HorizontalAxis, bool Jump) {
 		return !Jump ? HorizontalAxis * Speed : 0;
 	}
 
-	private void StartRotate(float Direction)
-	{
+	private void StartRotate(float Direction) {
 		if (M_IsRotating) return;
+		M_AudioSource.PlayOneShot(JumpClip);
+		M_IsGrounded = false;
 		StartCoroutine(Rotate(Direction, RotationSpeed));
 	}
 
-	private IEnumerator Rotate(float Direction, float Duration)
-	{
+	private IEnumerator Rotate(float Direction, float Duration) {
 		M_IsRotating = true;
 		yield return new WaitForSeconds(0.25f);
 
@@ -105,12 +101,13 @@ public class PlayerController : MonoBehaviour
 		var Angles = new Vector3(0, 0, 90f * Direction);
 		M_TargetRotation = Quaternion.Euler(Angles) * transform.rotation;
 
+		OnPlayerRotate.Invoke(M_TargetRotation); // notify others about rotation
+
 		// @todo clean this
 		UpdatePhysicDirection();
 		print(M_TargetRotation.eulerAngles);
 
-		for (float t = 0; t < Duration; t += Time.deltaTime)
-		{
+		for (float t = 0; t < Duration; t += Time.deltaTime) {
 			transform.rotation = Quaternion.Lerp(StartRotation, M_TargetRotation, t / Duration);
 			yield return null;
 		}
@@ -119,8 +116,7 @@ public class PlayerController : MonoBehaviour
 		M_IsRotating = false;
 	}
 
-	private void UpdatePhysicDirection()
-	{
+	private void UpdatePhysicDirection() {
 		M_PhysicsDirection = new Vector2(
 			M_TargetRotation.eulerAngles.z == 270f || M_TargetRotation.eulerAngles.z == 180f ? -1 : 1,
 			M_TargetRotation.eulerAngles.z == 180f || M_TargetRotation.eulerAngles.z == 90f ? -1 : 1
@@ -128,51 +124,42 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	private void CheckGround()
-	{
-		M_IsGrounded = Physics2D.Raycast(
-			transform.position, -transform.up,
-			GetOffsetDown(),
+	private void CheckGround() {
+		M_IsGrounded = Physics2D.BoxCast(
+			transform.position - new Vector3(0, GetOffsetDown(), 0),
+			M_LocalScale/2f,
+			0,
+			transform.TransformDirection(-Vector3.up),
+			0,
 			FloorLayerMask
 		);
 	}
 
-	private void FixedUpdate()
-	{
-		if (M_RigidBody.velocity.x > MaxHorizontalSpeed)
-		{
-			M_NextMovement.x = 0;
-		}
-
+	private void FixedUpdate() {
 		M_NextMovement.x *= M_PhysicsDirection.x;
 		M_NextMovement.y *= M_PhysicsDirection.y;
 
-		Vector2 NextMovement = M_NextMovement;
+		Vector3 NextMovement = M_NextMovement;
 
 		// @todo clean this
-		if (NeedToSwitchControls())
-		{
+		if (NeedToSwitchControls()) {
 			NextMovement.x = M_NextMovement.y;
 			NextMovement.y = M_NextMovement.x;
 		}
-
 		M_RigidBody.AddForce(NextMovement * Time.fixedDeltaTime, ForceMode2D.Impulse);
 	}
 
-	private bool NeedToSwitchControls()
-	{
+	private bool NeedToSwitchControls() {
 		return M_TargetRotation.eulerAngles.z == 90f || M_TargetRotation.eulerAngles.z == 270f;
 	}
 
-	private void OnDrawGizmos()
-	{
+	private void OnDrawGizmos() {
 		Gizmos.color = Color.green;
 		var position = transform.position;
-		Gizmos.DrawLine(position, position + transform.TransformDirection(Vector3.down) * GetOffsetDown());
+		Gizmos.DrawWireCube(position - new Vector3(0, GetOffsetDown(), 0), M_LocalScale / 2f);
 	}
 
-	private float GetOffsetDown()
-	{
+	private float GetOffsetDown() {
 		return (M_LocalScale.y / 2f + 0.05f);
 	}
 }

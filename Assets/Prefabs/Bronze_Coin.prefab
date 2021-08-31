@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4517100974257778376}
   - component: {fileID: 9139633688103746343}
+  - component: {fileID: 4746100858072452907}
   - component: {fileID: 4517100974257778377}
   - component: {fileID: 8064031955273226208}
   - component: {fileID: 639186810}
@@ -49,6 +50,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CollectableType: 2
   CollectSound: {fileID: 8300000, guid: 5cfc4c6f92867c041ae0dcae393720bb, type: 3}
+--- !u!114 &4746100858072452907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4517100974257778358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2c52ec4ee8ef0d47a734dc7b118733d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &4517100974257778377
 SpriteRenderer:
   m_ObjectHideFlags: 0

@@ -48,13 +48,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 413799ffb24398749bbee408ff51d248, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Speed: 20
-  MaxHorizontalSpeed: 25
+  Speed: 10
+  MaxHorizontalSpeed: 15
   JumpForce: 200
   FloorLayerMask:
     serializedVersion: 2
     m_Bits: 64
-  RotationSpeed: 0.1
+  RotationSpeed: 0.2
   JumpClip: {fileID: 8300000, guid: 4aa497eda4a0b704082092a5bdb9446d, type: 3}
 --- !u!212 &5393679446401862307
 SpriteRenderer:
@@ -282,7 +282,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.20784315, g: 0.20392159, b: 0.20784315, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
