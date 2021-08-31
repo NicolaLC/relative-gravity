@@ -1,11 +1,14 @@
-using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
    
    [SerializeField] private bool TestMode = false;
+
+   public static UnityEvent OnGameFailed = new UnityEvent();
    
    private static GameManager Instance;
 
@@ -58,6 +61,13 @@ public class GameManager : MonoBehaviour
    
    public static void GameFailed()
    {
+      OnGameFailed.Invoke();
+      Instance.StartCoroutine(Instance.GameEndedDelay());
+   }
+
+   private IEnumerator GameEndedDelay()
+   {
+      yield return new WaitForSeconds(2f);
       ReloadScene();
    }
 

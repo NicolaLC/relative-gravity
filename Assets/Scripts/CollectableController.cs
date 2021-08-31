@@ -14,6 +14,8 @@ public class CollectableController : MonoBehaviour
 {
     [SerializeField, Header("Configuration")]
     private ECollectableType CollectableType = ECollectableType.Gold;
+
+    [SerializeField] private GameObject SpawnOnDeath;
     
     [SerializeField, Header("Audio Settings")]
     private AudioClip CollectSound;
@@ -31,6 +33,8 @@ public class CollectableController : MonoBehaviour
         M_AudioSource.PlayOneShot(CollectSound);
         Destroy(GetComponent<SpriteRenderer>());
         Destroy(GetComponent<BoxCollider2D>());
+
+        Instantiate(SpawnOnDeath, transform.position, Quaternion.identity);
         Invoke(nameof(DestroyMe), 1f);
     }
     

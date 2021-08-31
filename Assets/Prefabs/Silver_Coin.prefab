@@ -21,11 +21,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4517100974257778376, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.4701376
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4517100974257778376, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.5602455
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4517100974257778376, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
       propertyPath: m_LocalPosition.z
@@ -63,6 +63,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: ad5b7c85aea3b2144a40250010b3b3bb, type: 3}
+    - target: {fileID: 8064031955273226208, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 0.09375
+      objectReference: {fileID: 0}
+    - target: {fileID: 8064031955273226208, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 0.10839844
+      objectReference: {fileID: 0}
     - target: {fileID: 9139633688103746343, guid: 9bb3b2b18f480914ab5c30b8be64de08, type: 3}
       propertyPath: CollectableType
       value: 1
