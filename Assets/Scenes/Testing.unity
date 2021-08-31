@@ -1930,11 +1930,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5094845679173686748, guid: f7d7ba2b42563a546895811efb81bbeb, type: 3}
       propertyPath: m_Radius
-      value: 0.35
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 5094845679173686748, guid: f7d7ba2b42563a546895811efb81bbeb, type: 3}
       propertyPath: m_Offset.y
-      value: -0.025
+      value: -0.03
       objectReference: {fileID: 0}
     - target: {fileID: 5393679446401862304, guid: f7d7ba2b42563a546895811efb81bbeb, type: 3}
       propertyPath: m_RootOrder
