@@ -37,6 +37,9 @@ public class PlayerController : MonoBehaviour
     private float M_VerticalAcceleration = 0f;
     private bool M_GameEnded = false;
 
+    private Vector3 M_TargetPosition = Vector3.zero;
+    private bool M_IsMovingToTargetPosition = false;
+
     private void Awake()
     {
         M_RigidBody = GetComponent<Rigidbody2D>();
@@ -65,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (M_GameEnded)
+        if (M_GameEnded || M_IsMovingToTargetPosition)
         {
             M_RigidBody.velocity = Vector2.zero;
             M_NextMovement = Vector3.zero;
@@ -74,7 +77,7 @@ public class PlayerController : MonoBehaviour
         
         CheckGround();
 
-        var HorizontalAxis = Input.GetAxisRaw("Horizontal");
+        // var HorizontalAxis = Input.GetAxisRaw("Horizontal");
 
         // update movement
         M_NextMovement.x = 0; // GetHorizontalMovement(HorizontalAxis);
@@ -85,20 +88,18 @@ public class PlayerController : MonoBehaviour
             M_AudioSource.PlayOneShot(JumpClip);
         }
 
-        if (HorizontalAxis != 0)
-        {
-            M_IsSpriteFlipped = HorizontalAxis < 0;
-            M_SpriteRenderer.flipX = M_IsSpriteFlipped;
-        }
-
         if (Input.GetAxisRaw("Fire1") != 0)
         {
+            M_IsSpriteFlipped = true;
             StartRotate(-1);
         }
         else if (Input.GetAxisRaw("Fire2") != 0)
         {
+            M_IsSpriteFlipped = false;
             StartRotate(1);
         }
+
+        M_SpriteRenderer.flipX = M_IsSpriteFlipped;
     }
 
     private float GetVerticalMovement(float VerticalAxis)
@@ -125,6 +126,7 @@ public class PlayerController : MonoBehaviour
     {
         if (M_IsRotating) return;
         M_IsGrounded = false;
+        M_TargetPosition = transform.position;
         StartCoroutine(Rotate(Direction, RotationSpeed));
     }
 
@@ -208,5 +210,28 @@ public class PlayerController : MonoBehaviour
     private float GetOffsetDown()
     {
         return (M_LocalScale.y / 2f + 0.05f);
+    }
+
+    public void MoveOnRopePosition(Vector2 RopeLastPosition)
+    {
+        M_TargetPosition = RopeLastPosition;
+        StartCoroutine(MoveToTargetPosition());
+    }
+
+    private IEnumerator MoveToTargetPosition()
+    {
+        M_IsMovingToTargetPosition = true;
+        while (Vector3.Distance(transform.position, M_TargetPosition) > .5f)
+        {
+            transform.position = Vector3.Lerp(transform.position, M_TargetPosition, .1f);
+            yield return null;
+        }
+
+        M_IsMovingToTargetPosition = false;
+    }
+
+    public void Stop()
+    {
+        M_NextMovement = Vector3.zero;
     }
 }

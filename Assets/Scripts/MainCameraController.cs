@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 public class MainCameraController : MonoBehaviour
@@ -26,11 +25,20 @@ public class MainCameraController : MonoBehaviour
         }
 
         M_FOV = DefaultFOV;
+        M_Camera.fieldOfView = M_FOV;
     }
 
     private void Start()
     {
         GameManager.OnGameFailed.AddListener(OnGameFailed);
+    }
+
+    private void Update()
+    {
+        if (Math.Abs(M_Camera.fieldOfView - M_FOV) > 0.1f)
+        {
+            M_Camera.fieldOfView = Mathf.Lerp(M_Camera.fieldOfView, M_FOV, .1f);
+        }
     }
 
     private void OnGameFailed()
@@ -51,19 +59,5 @@ public class MainCameraController : MonoBehaviour
     private void SetFOV(float NextFOV)
     {
         M_FOV = NextFOV;
-        StopCoroutine(ChangeFOV());
-        StartCoroutine(ChangeFOV());
-    }
-
-    private IEnumerator ChangeFOV()
-    {
-        var Direction = M_Camera.fieldOfView > M_FOV ? -1 : 1;
-        while (Math.Abs(M_Camera.fieldOfView - M_FOV) > 0.1f)
-        {
-            M_Camera.fieldOfView += 1f * Direction;
-            yield return null;
-        }
-
-        M_Camera.fieldOfView = M_FOV;
     }
 }
