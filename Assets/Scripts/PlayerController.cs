@@ -140,7 +140,6 @@ public class PlayerController : MonoBehaviour
 
         // @todo clean this
         UpdatePhysicDirection();
-        print(M_TargetRotation.eulerAngles);
 
         for (float t = 0; t < Duration; t += Time.deltaTime)
         {
