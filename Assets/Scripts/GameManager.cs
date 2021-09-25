@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -6,10 +7,11 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private bool TestMode = false;
-
     public static UnityEvent OnGameFailed = new UnityEvent();
 
     private static GameManager Instance;
+    private bool GameEnded;
+    private bool bIsGamePaused = false;
 
     private void Awake()
     {
@@ -27,6 +29,14 @@ public class GameManager : MonoBehaviour
         DisableCursor();
     }
 
+    private void Start()
+    {
+        if (TestMode)
+        {
+            ResourceManager.CollectableGained(1000); // add 1000 resources
+        }
+    }
+
     private void Update()
     {
         if (TestMode) TestModeUpdate();
@@ -40,13 +50,20 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.R))
         {
+            GameEnded = true;
             ReloadScene();
         }
     }
 
     public static void GoalReached()
     {
+        if (Instance.GameEnded)
+        {
+            return;
+        }
+
         var CurrentScene = SceneManager.GetActiveScene();
+        ResourceManager.Commit();
         if (CurrentScene.buildIndex == SceneManager.sceneCountInBuildSettings - 1)
         {
             // game ended
@@ -62,7 +79,14 @@ public class GameManager : MonoBehaviour
 
     public static void GameFailed()
     {
+        if (Instance.GameEnded)
+        {
+            return;
+        }
+
+        Instance.GameEnded = true;
         OnGameFailed.Invoke();
+        ResourceManager.Revert();
         Instance.StartCoroutine(Instance.GameEndedDelay());
     }
 
@@ -75,6 +99,7 @@ public class GameManager : MonoBehaviour
     private static void ReloadScene()
     {
         var CurrentScene = SceneManager.GetActiveScene();
+        Instance.GameEnded = false;
         SceneManager.LoadScene(CurrentScene.buildIndex);
     }
 
@@ -99,5 +124,25 @@ public class GameManager : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = false;
+    }
+
+    public static void PauseGame()
+    {
+        Instance.bIsGamePaused = true;
+    }
+
+    public static void ResumeGame()
+    {
+        Instance.bIsGamePaused = false;
+    }
+
+    public static bool IsGamePaused()
+    {
+        return Instance.bIsGamePaused;
+    }
+
+    public static bool PlayerCanUseAbilities()
+    {
+        return FindObjectOfType<PlayerController>().CanUseAbility;
     }
 }

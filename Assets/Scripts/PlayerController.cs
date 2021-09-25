@@ -1,22 +1,35 @@
 using System;
 using System.Collections;
-using System.Data;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField, Header("Children Settings")]
+    private GameObject Attractor;
+
+    [SerializeField]
+    private GameObject BlueTrail;
+
+    [SerializeField]
+    private GameObject PurpleTrail;
+    
+    [SerializeField, Header("Ability Settings")]
+    public bool CanUseAbility = true;
+    
     [SerializeField, Header("Movement Settings")]
     private float Speed = 10f;
+
     [SerializeField] private float JumpForce = 5f;
     [SerializeField] private LayerMask FloorLayerMask;
     [SerializeField] private Transform GroundCheckSpot;
 
     [SerializeField, Space(10), Header("Rotation Settings")]
     private float RotationSpeed = .1f;
-    
+
     [SerializeField, Header("Audio Settings")]
     private AudioClip JumpClip;
+
     [SerializeField] private AudioClip DeathClip;
 
     public UnityEvent<Quaternion> OnPlayerRotate = new UnityEvent<Quaternion>();
@@ -27,7 +40,7 @@ public class PlayerController : MonoBehaviour
     private bool M_IsRotating = false;
     private Vector3 M_LocalScale = Vector3.one;
     private Quaternion M_TargetRotation;
-    private float M_Gravity = -10f;
+    private float M_Gravity = -8f;
     private Vector2 M_PhysicsDirection = Vector2.one;
     private AudioSource M_AudioSource;
 
@@ -36,6 +49,8 @@ public class PlayerController : MonoBehaviour
 
     private float M_VerticalAcceleration = 0f;
     private bool M_GameEnded = false;
+
+    private float M_WaitBeforeTakingInput = 0.25f;
 
     private Vector3 M_TargetPosition = Vector3.zero;
     private bool M_IsMovingToTargetPosition = false;
@@ -68,47 +83,46 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.IsGamePaused())
+        {
+            return;
+        }
+
+        // wait a little delay
+        if (M_WaitBeforeTakingInput > 0)
+        {
+            M_WaitBeforeTakingInput -= Time.deltaTime;
+            return;
+        }
+
         if (M_GameEnded || M_IsMovingToTargetPosition)
         {
             M_RigidBody.velocity = Vector2.zero;
             M_NextMovement = Vector3.zero;
             return;
         }
-        
+
         CheckGround();
 
         // var HorizontalAxis = Input.GetAxisRaw("Horizontal");
 
         // update movement
         M_NextMovement.x = 0; // GetHorizontalMovement(HorizontalAxis);
-        M_NextMovement.y = GetVerticalMovement(Input.GetAxisRaw("Jump"));
+        M_NextMovement.y = GetVerticalMovement();
 
-        if (!M_AudioSource.isPlaying && Input.GetAxisRaw("Jump") > 0 && M_IsGrounded)
-        {
-            M_AudioSource.PlayOneShot(JumpClip);
-        }
+        var HorizontalAxis = Input.GetAxisRaw("Horizontal");
 
-        if (Input.GetAxisRaw("Fire1") != 0)
+        if (HorizontalAxis != 0)
         {
-            M_IsSpriteFlipped = true;
-            StartRotate(-1);
+            M_IsSpriteFlipped = HorizontalAxis < 0;
+            StartRotate(HorizontalAxis);
+            M_SpriteRenderer.flipX = M_IsSpriteFlipped;
         }
-        else if (Input.GetAxisRaw("Fire2") != 0)
-        {
-            M_IsSpriteFlipped = false;
-            StartRotate(1);
-        }
-
-        M_SpriteRenderer.flipX = M_IsSpriteFlipped;
     }
 
-    private float GetVerticalMovement(float VerticalAxis)
+    private float GetVerticalMovement()
     {
-        return (VerticalAxis > 0) switch
-        {
-            true when M_IsGrounded => JumpForce,
-            _ => GetGravityForce()
-        };
+        return GetGravityForce();
     }
 
     private float GetGravityForce()
@@ -136,6 +150,7 @@ public class PlayerController : MonoBehaviour
 
         var StartRotation = transform.rotation;
         var Angles = new Vector3(0, 0, 90f * Direction);
+
         M_TargetRotation = Quaternion.Euler(Angles) * transform.rotation;
 
         OnPlayerRotate.Invoke(M_TargetRotation); // notify others about rotation
@@ -176,6 +191,11 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (GameManager.IsGamePaused())
+        {
+            return;
+        }
+
         M_NextMovement.x *= M_PhysicsDirection.x;
         M_NextMovement.y *= M_PhysicsDirection.y;
 
@@ -223,7 +243,7 @@ public class PlayerController : MonoBehaviour
         M_IsMovingToTargetPosition = true;
         while (Vector3.Distance(transform.position, M_TargetPosition) > .5f)
         {
-            transform.position = Vector3.Lerp(transform.position, M_TargetPosition, .1f);
+            transform.position = Vector3.Lerp(transform.position, M_TargetPosition, .05f);
             yield return null;
         }
 
@@ -233,5 +253,34 @@ public class PlayerController : MonoBehaviour
     public void Stop()
     {
         M_NextMovement = Vector3.zero;
+    }
+
+    public void Attract(float Duration)
+    {
+        Attractor.SetActive(true);
+        StartCoroutine(StopAttract(Duration));
+    }
+
+    private IEnumerator StopAttract(float Duration)
+    {
+        yield return new WaitForSeconds(Duration);
+        Attractor.SetActive(false);
+    }
+
+    public void SlowGravity(float Duration)
+    {
+        M_Gravity = M_Gravity / 2.0f;
+        M_VerticalAcceleration = 0f;
+        BlueTrail.SetActive(false);
+        PurpleTrail.SetActive(true);
+        StartCoroutine(RestoreGravity(Duration));
+    }
+
+    private IEnumerator RestoreGravity(float Duration)
+    {
+        yield return new WaitForSeconds(Duration);
+        BlueTrail.SetActive(true);
+        PurpleTrail.SetActive(false);
+        M_Gravity = M_Gravity * 2.0f;
     }
 }
